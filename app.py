@@ -6,6 +6,14 @@ import os
 
 app = Flask(__name__)
 
+@app.route('/')
+def index():
+    return '''
+    <h1>Welcome to the Background Removal API</h1>
+    <p>Use the <code>/remove-background</code> endpoint to remove the background from an image.</p>
+    <p>Send a POST request with the image file in the <code>file</code> field.</p>
+    '''
+
 @app.route('/remove-background', methods=['POST'])
 def remove_background():
     if 'file' not in request.files:
@@ -38,7 +46,18 @@ def remove_background():
         output_bytes.seek(0)
 
         app.logger.info('Image processed and returned as bytes')
-        return send_file(output_bytes, mimetype='image/png')
+
+        # Return a message along with the image
+        return send_file(
+            output_bytes,
+            mimetype='image/png',
+            as_attachment=True,
+            download_name='output.png',
+            headers={
+                'X-Status': 'API running successfully',
+                'X-Message': 'Background removed successfully'
+            }
+        )
 
     except Exception as e:
         app.logger.error(f'An error occurred during processing: {str(e)}')
